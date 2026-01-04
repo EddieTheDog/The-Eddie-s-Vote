@@ -1,53 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Eddie's 2025 | Results</title>
-<style>
-body{ font-family: 'Inter', sans-serif; padding:20px; background:#fff; color:#000;}
-h1{ letter-spacing:5px; text-transform:uppercase; text-align:center;}
-.category{ margin-bottom:30px; }
-.winner{ font-weight:bold; color:#007aff;}
-.film-votes{ margin-left:20px;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Eddie's 2025 | Live Results</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #000000;
+            --text-dim: #666666;
+            --border: #eeeeee;
+            --accent: #000000;
+            --winner-gold: #000000; /* Keeping it B&W as requested */
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            padding: 60px 20px; 
+            max-width: 800px; 
+            margin: auto; 
+            background: var(--bg); 
+            color: var(--text);
+        }
+
+        .header-area { text-align: center; margin-bottom: 60px; }
+        .logo { width: 120px; height: auto; margin-bottom: 20px; }
+        h1 { font-weight: 300; letter-spacing: 4px; text-transform: uppercase; font-size: 1.2rem; margin: 0; }
+
+        .category-card { 
+            margin-bottom: 50px; 
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
+        }
+
+        h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 25px; font-weight: 600; }
+
+        .film-row { margin-bottom: 15px; }
+        
+        .film-info { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.85rem; 
+            margin-bottom: 8px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bar-container { 
+            width: 100%; 
+            height: 8px; 
+            background: #f0f0f0; 
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bar-fill { 
+            height: 100%; 
+            background: #d0d0d0; 
+            transition: width 1s ease-out; 
+        }
+
+        .is-winner .bar-fill { background: var(--accent); }
+        .is-winner .film-name::after { 
+            content: "• WINNER"; 
+            margin-left: 10px; 
+            font-weight: 800; 
+            font-size: 0.7rem;
+        }
+
+        .vote-count { font-weight: 600; }
+        .total-badge { 
+            display: block; 
+            text-align: center; 
+            font-size: 0.7rem; 
+            color: var(--text-dim); 
+            margin-top: 40px;
+            letter-spacing: 1px;
+        }
+    </style>
 </head>
 <body>
-<h1>The Eddie's 2025 Results</h1>
-<div id="results-container"></div>
+
+<div class="header-area">
+    <img src="https://static.wixstatic.com/media/4510e9_bfe003d2401544b28aeeefef976db05a~mv2.png" alt="Logo" class="logo">
+    <h1>The Eddie's (2025) - Live Results</h1>
+</div>
+
+<div id="results-container">
+    </div>
+
+<span id="total-votes-display" class="total-badge"></span>
 
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-const supabase = createClient(
-    'https://asrydhgpdlpocuapcvuf.supabase.co',
-    'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
-);
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const supabase = createClient(
+        'https://asrydhgpdlpocuapcvuf.supabase.co',
+        'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
+    );
 
-async function loadResults(){
-    const { data: categories } = await supabase.from('categories').select('*').eq('active',true).order('id');
-    const { data: films } = await supabase.from('films').select('*').order('name');
-    const { data: votes } = await supabase.from('votes').select('*');
+    async function loadResults(){
+        const container = document.getElementById('results-container');
+        
+        // Fetch data
+        const { data: categories } = await supabase.from('categories').select('*').order('id');
+        const { data: films } = await supabase.from('films').select('*').order('name');
+        const { data: votes } = await supabase.from('votes').select('*');
 
-    const container = document.getElementById('results-container');
+        if(!categories || !votes) return;
 
-    categories.forEach(cat=>{
-        const votesInCat = votes.filter(v=>v.category_id===cat.id);
-        const counts = {};
-        films.forEach(f=> counts[f.name]=votesInCat.filter(v=>v.film_id===f.id).length);
-        const maxVotes = Math.max(...Object.values(counts));
-        const winners = Object.keys(counts).filter(f=>counts[f]===maxVotes);
+        document.getElementById('total-votes-display').textContent = `TOTAL BALLOTS CAST: ${votes.length}`;
 
-        let html = `<div class="category"><h2>${cat.name}</h2>`;
-        html+=`<div class="winner">Winner: ${winners.join(', ')} (${maxVotes} vote(s))</div>`;
-        for(const f in counts){
-            html+=`<div class="film-votes">${f}: ${counts[f]} vote(s)</div>`;
-        }
-        html+='</div>';
-        container.innerHTML+=html;
-    });
-}
+        container.innerHTML = ''; // Clear loading
 
-loadResults();
+        categories.forEach(cat => {
+            const votesInCat = votes.filter(v => v.category_id === cat.id);
+            const totalCatVotes = votesInCat.length;
+            
+            // Map votes to films
+            const filmStats = films.map(f => {
+                const count = votesInCat.filter(v => v.film_id === f.id).length;
+                return { name: f.name, count: count };
+            });
+
+            // Determine Winner
+            const maxVotes = Math.max(...filmStats.map(s => s.count));
+
+            let html = `
+                <div class="category-card">
+                    <h2>${cat.name}</h2>
+            `;
+
+            filmStats.forEach(stat => {
+                const percentage = totalCatVotes > 0 ? (stat.count / totalCatVotes) * 100 : 0;
+                const isWinner = stat.count === maxVotes && maxVotes > 0;
+
+                html += `
+                    <div class="film-row ${isWinner ? 'is-winner' : ''}">
+                        <div class="film-info">
+                            <span class="film-name">${stat.name}</span>
+                            <span class="vote-count">${stat.count} vote(s)</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    loadResults();
 </script>
 </body>
 </html>
