@@ -5,19 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Eddie's 2025 | Admin Panel</title>
 <style>
-body{ font-family:'Inter',sans-serif; padding:40px; max-width:500px; margin:auto; background:#fff; color:#000;}
-h1{ text-align:center; letter-spacing:5px; text-transform:uppercase; }
-button{ padding:15px 30px; font-size:16px; margin:10px 0; cursor:pointer; background:#007aff; color:white; border:none; border-radius:5px; }
+body{ font-family:'Inter',sans-serif; padding:20px; max-width:800px; margin:auto; background:#fff; color:#000;}
+h1{ text-align:center; letter-spacing:5px; text-transform:uppercase;}
+section{ margin-bottom:30px; }
+button{ padding:8px 16px; margin-left:10px; cursor:pointer; background:#007aff; color:white; border:none; border-radius:5px; }
 button:hover{ background:#005bb5;}
-.status{ margin-top:20px; font-weight:bold; font-size:1.1rem; }
+input[type=text]{ padding:5px; width:200px; }
+.status{ margin-top:10px; font-weight:bold; }
+table{ width:100%; border-collapse:collapse; margin-top:10px;}
+th, td{ border:1px solid #ccc; padding:8px; text-align:left;}
+th{ background:#f0f0f0;}
 </style>
 </head>
 <body>
 
 <h1>Admin Panel</h1>
-<p>Toggle voting on/off for The Eddie's 2025</p>
+
+<section>
+<h2>Voting Control</h2>
 <button id="toggle-btn">Loading...</button>
 <div class="status" id="status"></div>
+</section>
+
+<section>
+<h2>Edit Categories</h2>
+<table id="category-table">
+<thead>
+<tr><th>ID</th><th>Category Name</th><th>Action</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+
+<section>
+<h2>Edit Films</h2>
+<table id="film-table">
+<thead>
+<tr><th>ID</th><th>Film Name</th><th>Action</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
@@ -28,49 +56,80 @@ const supabase = createClient(
 );
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const btn = document.getElementById('toggle-btn');
+  const toggleBtn = document.getElementById('toggle-btn');
   const statusDiv = document.getElementById('status');
+  const catTableBody = document.querySelector('#category-table tbody');
+  const filmTableBody = document.querySelector('#film-table tbody');
 
-  async function loadStatus() {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('voting_enabled')
-      .eq('id', 1)
-      .single();
-
-    if (error || !data) {
-      statusDiv.textContent = "Error loading status";
-      btn.disabled = true;
-      return;
-    }
-
-    btn.textContent = data.voting_enabled ? "Disable Voting" : "Enable Voting";
+  // --- Voting toggle ---
+  async function loadVotingStatus() {
+    const { data, error } = await supabase.from('settings').select('voting_enabled').eq('id',1).single();
+    if(error || !data){ statusDiv.textContent="Error loading status"; toggleBtn.disabled=true; return;}
+    toggleBtn.textContent = data.voting_enabled ? "Disable Voting" : "Enable Voting";
     statusDiv.textContent = data.voting_enabled ? "Voting is currently ENABLED" : "Voting is currently DISABLED";
   }
 
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    statusDiv.textContent = "Updating...";
-
-    const { data: current } = await supabase
-      .from('settings')
-      .select('voting_enabled')
-      .eq('id', 1)
-      .single();
-
+  toggleBtn.addEventListener('click', async ()=>{
+    toggleBtn.disabled=true;
+    const { data: current } = await supabase.from('settings').select('voting_enabled').eq('id',1).single();
     const newStatus = !current.voting_enabled;
-
-    await supabase
-      .from('settings')
-      .update({ voting_enabled: newStatus })
-      .eq('id', 1);
-
-    await loadStatus();
-    btn.disabled = false;
+    await supabase.from('settings').update({voting_enabled:newStatus}).eq('id',1);
+    await loadVotingStatus();
+    toggleBtn.disabled=false;
   });
 
-  // Initial load
-  await loadStatus();
+  await loadVotingStatus();
+
+  // --- Load and edit categories ---
+  async function loadCategories() {
+    const { data: categories } = await supabase.from('categories').select('*').order('id');
+    catTableBody.innerHTML='';
+    categories.forEach(cat=>{
+      const row=document.createElement('tr');
+      row.innerHTML=`
+        <td>${cat.id}</td>
+        <td><input type="text" value="${cat.name}" data-id="${cat.id}"></td>
+        <td><button data-id="${cat.id}" class="save-cat">Save</button></td>
+      `;
+      catTableBody.appendChild(row);
+    });
+
+    document.querySelectorAll('.save-cat').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.dataset.id;
+        const input = document.querySelector(`input[data-id='${id}']`);
+        await supabase.from('categories').update({name: input.value}).eq('id',id);
+        alert('Category updated!');
+      });
+    });
+  }
+
+  // --- Load and edit films ---
+  async function loadFilms() {
+    const { data: films } = await supabase.from('films').select('*').order('id');
+    filmTableBody.innerHTML='';
+    films.forEach(film=>{
+      const row=document.createElement('tr');
+      row.innerHTML=`
+        <td>${film.id}</td>
+        <td><input type="text" value="${film.name}" data-id="${film.id}"></td>
+        <td><button data-id="${film.id}" class="save-film">Save</button></td>
+      `;
+      filmTableBody.appendChild(row);
+    });
+
+    document.querySelectorAll('.save-film').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.dataset.id;
+        const input = document.querySelector(`input[data-id='${id}']`);
+        await supabase.from('films').update({name: input.value}).eq('id',id);
+        alert('Film updated!');
+      });
+    });
+  }
+
+  await loadCategories();
+  await loadFilms();
 });
 </script>
 
