@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Eddie's 2025 Admin</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f7f7f7; color: #222; padding: 20px; }
+h1 { text-align: center; }
+button { padding: 10px 20px; margin-top: 10px; cursor: pointer; border: none; background-color: #007AFF; color: white; border-radius: 5px; }
+button:hover { background-color: #005BBB; }
+input, select { margin: 5px 0; padding: 5px; }
+</style>
+</head>
+<body>
+<h1>The Eddie's 2025 Admin</h1>
+
+<h2>Add Category</h2>
+<input type="text" id="new-category" placeholder="Category name">
+<button id="add-category-btn">Add Category</button>
+
+<h2>Add Film</h2>
+<select id="category-select"></select>
+<input type="text" id="new-film" placeholder="Film name">
+<button id="add-film-btn">Add Film</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://YOUR_SUPABASE_URL.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let categories = [];
+let films = [];
+let settings = [];
+
+const categorySelect = document.getElementById('category-select');
+
+async function loadCategories() {
+  const { data } = await supabase.from('categories').select('*').order('id');
+  categories = data;
+  categorySelect.innerHTML = '';
+  for (let category of categories) {
+    const option = document.createElement('option');
+    option.value = category.id;
+    option.textContent = category.name;
+    categorySelect.appendChild(option);
+  }
+}
+
+loadCategories();
+
+document.getElementById('add-category-btn').addEventListener('click', async () => {
+  const name = document.getElementById('new-category').value.trim();
+  if (!name) return;
+  await supabase.from('categories').insert([{ name, active: true }]);
+  document.getElementById('new-category').value = '';
+  loadCategories();
+});
+
+document.getElementById('add-film-btn').addEventListener('click', async () => {
+  const name = document.getElementById('new-film').value.trim();
+  const categoryId = parseInt(categorySelect.value);
+  if (!name || !categoryId) return;
+  await supabase.from('films').insert([{ name, category_id: categoryId }]);
+  document.getElementById('new-film').value = '';
+});
+</script>
+</body>
+</html>
