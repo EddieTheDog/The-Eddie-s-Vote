@@ -10,8 +10,7 @@ h1 { text-align:center; }
 .categories { margin:20px 0; }
 .category { background:#fff; padding:15px; margin-bottom:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
 .category h2 { margin-top:0; }
-.films { margin-left:15px; }
-.film-result { margin:5px 0; }
+.film-winner { font-weight:bold; margin:5px 0; }
 </style>
 </head>
 <body>
@@ -30,6 +29,7 @@ window.onload = async () => {
   const supabase = window.supabase;
 
   const categoriesContainer = document.getElementById('categories-container');
+
   const { data: categoriesData } = await supabase.from('categories').select('*').eq('active', true).order('id');
   const { data: filmsData } = await supabase.from('films').select('*').order('id');
 
@@ -38,17 +38,31 @@ window.onload = async () => {
     categoryDiv.className = 'category';
     categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
 
-    const filmsDiv = document.createElement('div'); filmsDiv.className = 'films';
-
+    // Count votes for all films in this category
+    let votesCount = [];
     for (let film of filmsData) {
-      const { count } = await supabase.from('votes').select('*', { count: 'exact' }).eq('category_id', category.id).eq('film_id', film.id);
-      const filmResultDiv = document.createElement('div');
-      filmResultDiv.className = 'film-result';
-      filmResultDiv.textContent = `${film.name}: ${count} vote(s)`;
-      filmsDiv.appendChild(filmResultDiv);
+      const { count } = await supabase.from('votes')
+        .select('*', { count: 'exact' })
+        .eq('category_id', category.id)
+        .eq('film_id', film.id);
+      votesCount.push({ filmName: film.name, votes: count });
     }
 
-    categoryDiv.appendChild(filmsDiv);
+    // Find the winner (film with most votes)
+    let maxVotes = Math.max(...votesCount.map(v => v.votes));
+    let winners = votesCount.filter(v => v.votes === maxVotes);
+
+    const winnerDiv = document.createElement('div');
+    winnerDiv.className = 'film-winner';
+
+    if (winners.length === 1) {
+      winnerDiv.textContent = `Winner: ${winners[0].filmName} (${winners[0].votes} vote(s))`;
+    } else {
+      // Tie situation
+      winnerDiv.textContent = `Tie between: ${winners.map(w => w.filmName).join(', ')} (${maxVotes} vote(s) each)`;
+    }
+
+    categoryDiv.appendChild(winnerDiv);
     categoriesContainer.appendChild(categoryDiv);
   }
 };
