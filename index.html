@@ -1,110 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Eddie's 2025 Voting</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f7f7f7; color: #222; padding: 20px; }
-    h1 { text-align: center; }
-    .categories { margin: 20px 0; }
-    .category { background: #fff; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .category h2 { margin-top: 0; }
-    .films { margin-left: 15px; }
-    .film-option { margin: 5px 0; }
-    button { padding: 10px 20px; font-size: 16px; margin-top: 20px; cursor: pointer; border: none; background-color: #007AFF; color: white; border-radius: 5px; }
-    button:hover { background-color: #005BBB; }
-    #messages { margin-top: 20px; font-weight: bold; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Eddie's 2025 Voting</title>
+<style>
+body { font-family: Arial; background:#f7f7f7; padding:20px; }
+h1 { text-align:center; }
+.categories { margin:20px 0; }
+.category { background:#fff; padding:15px; margin-bottom:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+.category h2 { margin-top:0; }
+.films { margin-left:15px; }
+.film-option { margin:5px 0; }
+button { padding:10px 20px; font-size:16px; margin-top:20px; border:none; background:#007AFF; color:white; border-radius:5px; cursor:pointer; }
+button:hover { background:#005BBB; }
+#messages { margin-top:20px; font-weight:bold; }
+</style>
 </head>
 <body>
-  <h1>The Eddie's 2025 Voting</h1>
-  <div id="categories-container" class="categories"></div>
-  <button id="submit-votes-btn">Submit Votes</button>
-  <div id="messages"></div>
+<h1>The Eddie's 2025 Voting</h1>
+<div id="categories-container" class="categories"></div>
+<button id="submit-votes-btn">Submit Votes</button>
+<div id="messages"></div>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // ======= SETUP SUPABASE =======
-    const SUPABASE_URL = 'https://YOUR_SUPABASE_URL.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ===== Supabase Setup =====
+const SUPABASE_URL = 'https://asrydhgpdlpocuapcvuf.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu';
+const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ======= PLURAL VARIABLES =======
-    let categories = [];
-    let films = [];
-    let votes = [];
+// Plural variables
+let categories = [];
+let films = [];
+let votes = [];
 
-    const categoriesContainer = document.getElementById('categories-container');
-    const submitVotesBtn = document.getElementById('submit-votes-btn');
-    const messagesDiv = document.getElementById('messages');
+const categoriesContainer = document.getElementById('categories-container');
+const submitVotesBtn = document.getElementById('submit-votes-btn');
+const messagesDiv = document.getElementById('messages');
 
-    // ======= LOAD CATEGORIES AND FILMS =======
-    async function loadCategoriesAndFilms() {
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('active', true)
-        .order('id');
+async function loadCategoriesAndFilms() {
+  const { data: categoriesData } = await supabase.from('categories').select('*').eq('active', true).order('id');
+  categories = categoriesData;
 
-      if (categoriesError) { categoriesContainer.innerHTML = `<p>Error loading categories: ${categoriesError.message}</p>`; return; }
+  for (let category of categories) {
+    const categoryDiv = document.createElement('div');
+    categoryDiv.className = 'category';
+    categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
 
-      categories = categoriesData;
+    const { data: filmsData } = await supabase.from('films').select('*').eq('category_id', category.id).order('id');
+    films = filmsData;
 
-      for (let category of categories) {
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'category';
-        categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
-
-        const { data: filmsData, error: filmsError } = await supabase
-          .from('films')
-          .select('*')
-          .eq('category_id', category.id)
-          .order('id');
-
-        if (filmsError) { categoryDiv.innerHTML += `<p>Error loading films: ${filmsError.message}</p>`; }
-        else { 
-          const filmsDiv = document.createElement('div'); filmsDiv.className = 'films'; films = filmsData;
-          for (let film of films) {
-            const filmOptionDiv = document.createElement('div');
-            filmOptionDiv.className = 'film-option';
-            filmOptionDiv.innerHTML = `<label><input type="radio" name="category-${category.id}" value="${film.id}"> ${film.name}</label>`;
-            filmsDiv.appendChild(filmOptionDiv);
-          }
-          categoryDiv.appendChild(filmsDiv);
-        }
-
-        categoriesContainer.appendChild(categoryDiv);
-      }
+    const filmsDiv = document.createElement('div'); filmsDiv.className = 'films';
+    for (let film of films) {
+      const filmOptionDiv = document.createElement('div');
+      filmOptionDiv.className = 'film-option';
+      filmOptionDiv.innerHTML = `<label><input type="radio" name="category-${category.id}" value="${film.id}"> ${film.name}</label>`;
+      filmsDiv.appendChild(filmOptionDiv);
     }
+    categoryDiv.appendChild(filmsDiv);
+    categoriesContainer.appendChild(categoryDiv);
+  }
+}
 
-    loadCategoriesAndFilms();
+loadCategoriesAndFilms();
 
-    // ======= SUBMIT VOTES =======
-    submitVotesBtn.addEventListener('click', async () => {
-      votes = [];
-      messagesDiv.textContent = '';
-      submitVotesBtn.disabled = true;
+submitVotesBtn.addEventListener('click', async () => {
+  votes = [];
+  messagesDiv.textContent = '';
+  submitVotesBtn.disabled = true;
 
-      const categoriesDivs = document.querySelectorAll('.category');
+  const categoriesDivs = document.querySelectorAll('.category');
+  for (let categoryDiv of categoriesDivs) {
+    const radios = categoryDiv.querySelectorAll('input[type="radio"]');
+    let selectedFilmId = null;
+    radios.forEach(r => { if (r.checked) selectedFilmId = r.value; });
+    if (!selectedFilmId) { messagesDiv.textContent = 'Please select a film for each category!'; submitVotesBtn.disabled = false; return; }
+    const categoryId = parseInt(radios[0].name.split('-')[1]);
+    votes.push({ category_id: categoryId, film_id: parseInt(selectedFilmId) });
+  }
 
-      for (let categoryDiv of categoriesDivs) {
-        const radios = categoryDiv.querySelectorAll('input[type="radio"]');
-        let selectedFilmId = null;
-        radios.forEach(radio => { if (radio.checked) selectedFilmId = radio.value; });
-        if (!selectedFilmId) { messagesDiv.textContent = 'Please select a film for each category!'; submitVotesBtn.disabled = false; return; }
-        const categoryId = parseInt(radios[0].name.split('-')[1]);
-        votes.push({ category_id: categoryId, film_id: parseInt(selectedFilmId) });
-      }
+  for (let vote of votes) {
+    await supabase.from('votes').insert([vote]);
+  }
 
-      for (let vote of votes) {
-        const { error } = await supabase.from('votes').insert([vote]);
-        if (error) { messagesDiv.textContent = `Error submitting votes: ${error.message}`; submitVotesBtn.disabled = false; return; }
-      }
-
-      messagesDiv.textContent = 'Thank you! Your votes have been submitted.';
-    });
-  </script>
+  messagesDiv.textContent = 'Thank you! Your votes have been submitted.';
+});
+</script>
 </body>
 </html>
