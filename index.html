@@ -26,13 +26,16 @@ button:hover { background:#005BBB; }
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 window.onload = async () => {
-  let SUPABASE_URL = 'https://asrydhgpdlpocuapcvuf.supabase.co';
-  let SUPABASE_ANON_KEY = 'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu';
-  let supabase = supabase || Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Safe Supabase initialization
+  if (!window.supabase) {
+    window.supabase = Supabase.createClient(
+      'https://asrydhgpdlpocuapcvuf.supabase.co',
+      'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
+    );
+  }
+  const supabase = window.supabase;
 
-  // Plural variables
   let categories = [];
-  let films = [];
   let votes = [];
 
   const categoriesContainer = document.getElementById('categories-container');
@@ -49,10 +52,9 @@ window.onload = async () => {
       categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
 
       const { data: filmsData } = await supabase.from('films').select('*').eq('category_id', category.id).order('id');
-      films = filmsData;
 
       const filmsDiv = document.createElement('div'); filmsDiv.className = 'films';
-      for (let film of films) {
+      for (let film of filmsData) {
         const filmOptionDiv = document.createElement('div');
         filmOptionDiv.className = 'film-option';
         filmOptionDiv.innerHTML = `<label><input type="radio" name="category-${category.id}" value="${film.id}"> ${film.name}</label>`;
