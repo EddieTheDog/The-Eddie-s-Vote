@@ -6,16 +6,17 @@
 <title>The Eddie's 2025 Results</title>
 <style>
 body { font-family: Arial; background:#f7f7f7; padding:20px; }
-h1 { text-align:center; }
-.categories { margin:20px 0; }
+h1 { text-align:center; margin-bottom:30px; }
 .category { background:#fff; padding:15px; margin-bottom:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
 .category h2 { margin-top:0; }
-.film-winner { font-weight:bold; margin:5px 0; }
+.winner { font-weight:bold; font-size:1.1em; margin-bottom:10px; color:#007AFF; }
+.film-votes { margin-left:15px; margin-bottom:5px; }
+.tie { color:#FF4500; font-weight:bold; }
 </style>
 </head>
 <body>
 <h1>The Eddie's 2025 Results</h1>
-<div id="categories-container" class="categories"></div>
+<div id="categories-container"></div>
 
 <script type="module">
 window.onload = async () => {
@@ -48,21 +49,31 @@ window.onload = async () => {
       votesCount.push({ filmName: film.name, votes: count });
     }
 
-    // Find the winner (film with most votes)
+    // Find max votes
     let maxVotes = Math.max(...votesCount.map(v => v.votes));
-    let winners = votesCount.filter(v => v.votes === maxVotes);
+    let winners = votesCount.filter(v => v.votes === maxVotes && maxVotes > 0);
 
+    // Display winner or tie
     const winnerDiv = document.createElement('div');
-    winnerDiv.className = 'film-winner';
-
-    if (winners.length === 1) {
-      winnerDiv.textContent = `Winner: ${winners[0].filmName} (${winners[0].votes} vote(s))`;
+    winnerDiv.className = 'winner';
+    if (winners.length === 0) {
+      winnerDiv.textContent = 'No votes yet';
+    } else if (winners.length === 1) {
+      winnerDiv.textContent = `Winner: ${winners[0].filmName} (${winners[0].votes} vote${winners[0].votes !== 1 ? 's' : ''})`;
     } else {
-      // Tie situation
-      winnerDiv.textContent = `Tie between: ${winners.map(w => w.filmName).join(', ')} (${maxVotes} vote(s) each)`;
+      winnerDiv.textContent = `Tie!`;
+      winnerDiv.classList.add('tie');
     }
-
     categoryDiv.appendChild(winnerDiv);
+
+    // Show all films with votes
+    votesCount.forEach(v => {
+      const filmDiv = document.createElement('div');
+      filmDiv.className = 'film-votes';
+      filmDiv.textContent = `${v.filmName}: ${v.votes} vote${v.votes !== 1 ? 's' : ''}`;
+      categoryDiv.appendChild(filmDiv);
+    });
+
     categoriesContainer.appendChild(categoryDiv);
   }
 };
