@@ -8,17 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0a;
-            --card-bg: #141414;
-            --text: #ffffff;
-            --text-dim: #a0a0a0;
-            --border: #262626;
-            --accent: #ffffff;
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --text: #000000;
+            --text-dim: #666666;
+            --border: #000000;
+            --border-light: #e0e0e0;
+            --accent: #000000;
         }
 
         body { 
             font-family: 'Inter', sans-serif; 
-            padding: 40px 20px; 
+            padding: 60px 20px; 
             max-width: 900px; 
             margin: auto; 
             background: var(--bg); 
@@ -26,72 +27,91 @@
             line-height: 1.6;
         }
 
-        .header-area { text-align: center; margin-bottom: 50px; }
-        .logo { width: 180px; height: auto; margin-bottom: 10px; }
-        h1 { font-weight: 300; letter-spacing: 6px; text-transform: uppercase; font-size: 1.2rem; margin: 0; }
+        /* Header Styles */
+        .header-area { text-align: center; margin-bottom: 60px; }
+        .logo { width: 140px; height: auto; margin-bottom: 20px; }
+        h1 { 
+            font-weight: 400; 
+            letter-spacing: 2px; 
+            font-size: 1.4rem; 
+            margin: 0; 
+            color: var(--text);
+        }
         
+        /* Section Containers */
         section { 
             background: var(--card-bg); 
-            padding: 30px; 
-            border-radius: 4px; 
-            border: 1px solid var(--border);
-            margin-bottom: 30px; 
+            padding: 30px 0; 
+            border-top: 1px solid var(--border-light);
+            margin-bottom: 40px; 
         }
 
-        h2 { margin-top: 0; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 20px; }
+        h2 { 
+            margin-top: 0; 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            color: var(--text); 
+            margin-bottom: 25px; 
+        }
 
+        /* Interaction Elements */
         .control-group { display: flex; align-items: center; gap: 20px; }
 
         button { 
-            padding: 10px 24px; 
+            padding: 12px 28px; 
             cursor: pointer; 
             background: var(--accent); 
-            color: black; 
+            color: #ffffff; 
             border: 1px solid var(--accent);
-            border-radius: 2px; 
+            border-radius: 0; /* Sharp edges for a modern B&W look */
             font-weight: 600;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
-        button:hover { background: transparent; color: white; }
-        button:disabled { opacity: 0.3; cursor: not-allowed; }
+        button:hover { background: #ffffff; color: #000000; }
+        button:disabled { background: #cccccc; border-color: #cccccc; cursor: not-allowed; }
 
         input[type=text] { 
-            padding: 10px; 
+            padding: 12px; 
             width: 100%; 
             box-sizing: border-box;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 2px;
-            color: white;
-            transition: border 0.3s;
+            background: #fafafa;
+            border: 1px solid var(--border-light);
+            border-radius: 0;
+            color: #000;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
         }
 
-        input[type=text]:focus { border-color: var(--text-dim); outline: none; }
+        input[type=text]:focus { border-color: var(--accent); outline: none; background: #fff; }
 
+        /* Tables */
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+        th, td { padding: 18px 10px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { color: var(--text-dim); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
 
         .status-badge {
             font-size: 0.7rem;
             letter-spacing: 1px;
-            padding: 4px 10px;
-            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border: 1px solid var(--border-light);
             text-transform: uppercase;
+            font-weight: 600;
         }
-        .enabled { border-color: #fff; color: #fff; }
-        .disabled { color: #666; }
+        .enabled { background: #000; color: #fff; border-color: #000; }
+        .disabled { color: #999; }
     </style>
 </head>
 <body>
 
 <div class="header-area">
     <img src="https://static.wixstatic.com/media/4510e9_bfe003d2401544b28aeeefef976db05a~mv2.png" alt="The Eddie's Logo" class="logo">
-    <h1>Admin Control</h1>
+    <h1>The Eddie's (2025) - Admin Control</h1>
 </div>
 
 <section>
@@ -106,7 +126,7 @@
     <h2>Categories</h2>
     <table id="category-table">
         <thead>
-            <tr><th style="width: 80px;">ID</th><th>Name</th><th style="width: 120px;">Action</th></tr>
+            <tr><th style="width: 60px;">ID</th><th>Category Name</th><th style="width: 120px;">Action</th></tr>
         </thead>
         <tbody></tbody>
     </table>
@@ -116,7 +136,7 @@
     <h2>Film Nominations</h2>
     <table id="film-table">
         <thead>
-            <tr><th style="width: 80px;">ID</th><th>Film Title</th><th style="width: 120px;">Action</th></tr>
+            <tr><th style="width: 60px;">ID</th><th>Film Title</th><th style="width: 120px;">Action</th></tr>
         </thead>
         <tbody></tbody>
     </table>
@@ -133,8 +153,8 @@
     const updateUIStatus = (isEnabled) => {
         const btn = document.getElementById('toggle-btn');
         const badge = document.getElementById('status-badge');
-        btn.textContent = isEnabled ? "Close Voting" : "Open Voting";
-        badge.textContent = isEnabled ? "System Live" : "System Paused";
+        btn.textContent = isEnabled ? "Disable Voting" : "Enable Voting";
+        badge.textContent = isEnabled ? "Live" : "Paused";
         badge.className = `status-badge ${isEnabled ? 'enabled' : 'disabled'}`;
     };
 
@@ -145,18 +165,21 @@
     }
 
     async function loadVotingStatus() {
-        const { data } = await supabase.from('settings').select('voting_enabled').eq('id', 1).single();
-        if (data) updateUIStatus(data.voting_enabled);
+        try {
+            const { data } = await supabase.from('settings').select('voting_enabled').eq('id', 1).single();
+            if (data) updateUIStatus(data.voting_enabled);
+        } catch(e) { console.error("Could not load status"); }
     }
 
     async function renderTable(tableName, tbodySelector) {
         const { data } = await supabase.from(tableName).select('*').order('id');
         const tbody = document.querySelector(tbodySelector);
+        if(!data) return;
         tbody.innerHTML = data.map(item => `
             <tr>
                 <td>${item.id}</td>
                 <td><input type="text" value="${item.name}" id="${tableName}-${item.id}"></td>
-                <td><button onclick="window.saveEntry('${tableName}', ${item.id})">Update</button></td>
+                <td><button onclick="window.saveEntry('${tableName}', ${item.id})">Save</button></td>
             </tr>
         `).join('');
     }
@@ -166,19 +189,20 @@
         try {
             const { error } = await supabase.from(table).update({ name: input.value }).eq('id', id);
             if (error) throw error;
-            alert('Database Updated');
+            alert('Updated Successfully');
         } catch (err) {
-            alert('Update Failed: ' + err.message);
+            alert('Error: ' + err.message);
         }
     };
 
     document.getElementById('toggle-btn').addEventListener('click', async (e) => {
-        e.target.disabled = true;
+        const btn = e.target;
+        btn.disabled = true;
         const { data } = await supabase.from('settings').select('voting_enabled').eq('id', 1).single();
         const nextState = !data.voting_enabled;
         await supabase.from('settings').update({ voting_enabled: nextState }).eq('id', 1);
         updateUIStatus(nextState);
-        e.target.disabled = false;
+        btn.disabled = false;
     });
 
     init();
