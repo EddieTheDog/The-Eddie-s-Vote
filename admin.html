@@ -26,10 +26,7 @@ button:hover { background:#005BBB; }
 
 <script type="module">
 window.onload = async () => {
-  // Dynamically import Supabase (ensures it's fully loaded)
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
-
-  // Safe initialization
   if (!window.supabase) {
     window.supabase = createClient(
       'https://asrydhgpdlpocuapcvuf.supabase.co',
@@ -40,23 +37,16 @@ window.onload = async () => {
 
   const categorySelect = document.getElementById('category-select');
 
-  // Wait a tiny bit to ensure DOM and supabase ready
-  await new Promise(r => setTimeout(r, 100));
-
   async function loadCategories() {
-    try {
-      const { data, error } = await supabase.from('categories').select('*').order('id');
-      if (error) throw error;
+    const { data, error } = await supabase.from('categories').select('*').order('id');
+    if (error) { console.error(error); return; }
 
-      categorySelect.innerHTML = '';
-      for (let category of data) {
-        const option = document.createElement('option');
-        option.value = category.id;
-        option.textContent = category.name;
-        categorySelect.appendChild(option);
-      }
-    } catch (err) {
-      console.error('Error loading categories:', err.message);
+    categorySelect.innerHTML = '';
+    for (let category of data) {
+      const option = document.createElement('option');
+      option.value = category.id;
+      option.textContent = category.name;
+      categorySelect.appendChild(option);
     }
   }
 
