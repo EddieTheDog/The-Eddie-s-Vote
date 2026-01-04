@@ -3,80 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Eddie's 2025 Results</title>
+<title>The Eddie's 2025 | Results</title>
 <style>
-body { font-family: Arial; background:#f7f7f7; padding:20px; }
-h1 { text-align:center; margin-bottom:30px; }
-.category { background:#fff; padding:15px; margin-bottom:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-.category h2 { margin-top:0; }
-.winner { font-weight:bold; font-size:1.1em; margin-bottom:10px; color:#007AFF; }
-.film-votes { margin-left:15px; margin-bottom:5px; }
-.tie { color:#FF4500; font-weight:bold; }
+body{ font-family: 'Inter', sans-serif; padding:20px; background:#fff; color:#000;}
+h1{ letter-spacing:5px; text-transform:uppercase; text-align:center;}
+.category{ margin-bottom:30px; }
+.winner{ font-weight:bold; color:#007aff;}
+.film-votes{ margin-left:20px;}
 </style>
 </head>
 <body>
 <h1>The Eddie's 2025 Results</h1>
-<div id="categories-container"></div>
+<div id="results-container"></div>
 
 <script type="module">
-window.onload = async () => {
-  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
-  if (!window.supabase) {
-    window.supabase = createClient(
-      'https://asrydhgpdlpocuapcvuf.supabase.co',
-      'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
-    );
-  }
-  const supabase = window.supabase;
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+const supabase = createClient(
+    'https://asrydhgpdlpocuapcvuf.supabase.co',
+    'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
+);
 
-  const categoriesContainer = document.getElementById('categories-container');
+async function loadResults(){
+    const { data: categories } = await supabase.from('categories').select('*').eq('active',true).order('id');
+    const { data: films } = await supabase.from('films').select('*').order('name');
+    const { data: votes } = await supabase.from('votes').select('*');
 
-  const { data: categoriesData } = await supabase.from('categories').select('*').eq('active', true).order('id');
-  const { data: filmsData } = await supabase.from('films').select('*').order('id');
+    const container = document.getElementById('results-container');
 
-  for (let category of categoriesData) {
-    const categoryDiv = document.createElement('div');
-    categoryDiv.className = 'category';
-    categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
+    categories.forEach(cat=>{
+        const votesInCat = votes.filter(v=>v.category_id===cat.id);
+        const counts = {};
+        films.forEach(f=> counts[f.name]=votesInCat.filter(v=>v.film_id===f.id).length);
+        const maxVotes = Math.max(...Object.values(counts));
+        const winners = Object.keys(counts).filter(f=>counts[f]===maxVotes);
 
-    // Count votes for all films in this category
-    let votesCount = [];
-    for (let film of filmsData) {
-      const { count } = await supabase.from('votes')
-        .select('*', { count: 'exact' })
-        .eq('category_id', category.id)
-        .eq('film_id', film.id);
-      votesCount.push({ filmName: film.name, votes: count });
-    }
-
-    // Find max votes
-    let maxVotes = Math.max(...votesCount.map(v => v.votes));
-    let winners = votesCount.filter(v => v.votes === maxVotes && maxVotes > 0);
-
-    // Display winner or tie
-    const winnerDiv = document.createElement('div');
-    winnerDiv.className = 'winner';
-    if (winners.length === 0) {
-      winnerDiv.textContent = 'No votes yet';
-    } else if (winners.length === 1) {
-      winnerDiv.textContent = `Winner: ${winners[0].filmName} (${winners[0].votes} vote${winners[0].votes !== 1 ? 's' : ''})`;
-    } else {
-      winnerDiv.textContent = `Tie!`;
-      winnerDiv.classList.add('tie');
-    }
-    categoryDiv.appendChild(winnerDiv);
-
-    // Show all films with votes
-    votesCount.forEach(v => {
-      const filmDiv = document.createElement('div');
-      filmDiv.className = 'film-votes';
-      filmDiv.textContent = `${v.filmName}: ${v.votes} vote${v.votes !== 1 ? 's' : ''}`;
-      categoryDiv.appendChild(filmDiv);
+        let html = `<div class="category"><h2>${cat.name}</h2>`;
+        html+=`<div class="winner">Winner: ${winners.join(', ')} (${maxVotes} vote(s))</div>`;
+        for(const f in counts){
+            html+=`<div class="film-votes">${f}: ${counts[f]} vote(s)</div>`;
+        }
+        html+='</div>';
+        container.innerHTML+=html;
     });
+}
 
-    categoriesContainer.appendChild(categoryDiv);
-  }
-};
+loadResults();
 </script>
 </body>
 </html>
