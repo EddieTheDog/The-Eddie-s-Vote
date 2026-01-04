@@ -3,71 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Eddie's 2025 Admin</title>
+<title>The Eddie's 2025 | Admin Panel</title>
 <style>
-body { font-family: Arial; background:#f7f7f7; padding:20px; }
-h1 { text-align:center; }
-input, select { margin:5px 0; padding:5px; }
-button { padding:10px 20px; margin-top:5px; border:none; background:#007AFF; color:white; border-radius:5px; cursor:pointer; }
-button:hover { background:#005BBB; }
+body{ font-family:'Inter',sans-serif; padding:40px; background:#fff; color:#000; max-width:500px; margin:auto;}
+h1{ text-align:center; letter-spacing:5px; text-transform:uppercase; }
+button{ padding:15px 30px; font-size:16px; margin:10px 0; cursor:pointer; background:#007aff; color:white; border:none; border-radius:5px; }
+button:hover{ background:#005bb5;}
+.status{ margin-top:20px; font-weight:bold; font-size:1.1rem; }
 </style>
 </head>
 <body>
-<h1>The Eddie's 2025 Admin</h1>
-
-<h2>Add Category</h2>
-<input type="text" id="new-category" placeholder="Category name">
-<button id="add-category-btn">Add Category</button>
-
-<h2>Add Film</h2>
-<select id="category-select"></select>
-<input type="text" id="new-film" placeholder="Film name">
-<button id="add-film-btn">Add Film</button>
+<h1>Admin Panel</h1>
+<p>Toggle voting on/off for The Eddie's 2025</p>
+<button id="toggle-btn">Loading...</button>
+<div class="status" id="status"></div>
 
 <script type="module">
-window.onload = async () => {
-  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
-  if (!window.supabase) {
-    window.supabase = createClient(
-      'https://asrydhgpdlpocuapcvuf.supabase.co',
-      'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
-    );
-  }
-  const supabase = window.supabase;
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+const supabase = createClient(
+    'https://asrydhgpdlpocuapcvuf.supabase.co',
+    'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
+);
 
-  const categorySelect = document.getElementById('category-select');
+const btn = document.getElementById('toggle-btn');
+const statusDiv = document.getElementById('status');
 
-  async function loadCategories() {
-    const { data, error } = await supabase.from('categories').select('*').order('id');
-    if (error) { console.error(error); return; }
+// Load current voting status
+async function loadStatus(){
+    const { data, error } = await supabase.from('settings').select('*').eq('id',1).single();
+    if(error){ statusDiv.textContent="Error loading status"; btn.disabled=true; return;}
+    btn.textContent = data.voting_enabled ? "Disable Voting" : "Enable Voting";
+    statusDiv.textContent = data.voting_enabled ? "Voting is currently ENABLED" : "Voting is currently DISABLED";
+}
 
-    categorySelect.innerHTML = '';
-    for (let category of data) {
-      const option = document.createElement('option');
-      option.value = category.id;
-      option.textContent = category.name;
-      categorySelect.appendChild(option);
-    }
-  }
+btn.addEventListener('click', async ()=>{
+    btn.disabled = true;
+    statusDiv.textContent="Updating...";
+    const { data: current } = await supabase.from('settings').select('*').eq('id',1).single();
+    const newStatus = !current.voting_enabled;
+    await supabase.from('settings').update({voting_enabled:newStatus}).eq('id',1);
+    await loadStatus();
+    btn.disabled=false;
+});
 
-  await loadCategories();
-
-  document.getElementById('add-category-btn')?.addEventListener('click', async () => {
-    const name = document.getElementById('new-category').value.trim();
-    if (!name) return;
-    await supabase.from('categories').insert([{ name, active: true }]);
-    document.getElementById('new-category').value = '';
-    await loadCategories();
-  });
-
-  document.getElementById('add-film-btn')?.addEventListener('click', async () => {
-    const name = document.getElementById('new-film').value.trim();
-    const categoryId = parseInt(categorySelect.value);
-    if (!name || !categoryId) return;
-    await supabase.from('films').insert([{ name, category_id: categoryId }]);
-    document.getElementById('new-film').value = '';
-  });
-};
+loadStatus();
 </script>
 </body>
 </html>
