@@ -20,6 +20,7 @@ button:hover{ background:#005bb5;}
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
 const supabase = createClient(
     'https://asrydhgpdlpocuapcvuf.supabase.co',
     'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
@@ -29,23 +30,29 @@ const btn = document.getElementById('toggle-btn');
 const statusDiv = document.getElementById('status');
 
 // Load current voting status
-async function loadStatus(){
-    const { data, error } = await supabase.from('settings').select('*').eq('id',1).single();
-    if(error){ statusDiv.textContent="Error loading status"; btn.disabled=true; return;}
+async function loadStatus() {
+    const { data, error } = await supabase.from('settings').select('voting_enabled').eq('id', 1).single();
+    if (error) {
+        statusDiv.textContent = "Error loading status";
+        btn.disabled = true;
+        return;
+    }
     btn.textContent = data.voting_enabled ? "Disable Voting" : "Enable Voting";
     statusDiv.textContent = data.voting_enabled ? "Voting is currently ENABLED" : "Voting is currently DISABLED";
 }
 
-btn.addEventListener('click', async ()=>{
+// Toggle voting
+btn.addEventListener('click', async () => {
     btn.disabled = true;
-    statusDiv.textContent="Updating...";
-    const { data: current } = await supabase.from('settings').select('*').eq('id',1).single();
+    statusDiv.textContent = "Updating...";
+    const { data: current } = await supabase.from('settings').select('voting_enabled').eq('id', 1).single();
     const newStatus = !current.voting_enabled;
-    await supabase.from('settings').update({voting_enabled:newStatus}).eq('id',1);
+    await supabase.from('settings').update({ voting_enabled: newStatus }).eq('id', 1);
     await loadStatus();
-    btn.disabled=false;
+    btn.disabled = false;
 });
 
+// Initialize
 loadStatus();
 </script>
 </body>
