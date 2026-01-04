@@ -25,67 +25,68 @@ button:hover { background:#005BBB; }
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ===== Supabase Setup =====
-const SUPABASE_URL = 'https://asrydhgpdlpocuapcvuf.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu';
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.onload = async () => {
+  let SUPABASE_URL = 'https://asrydhgpdlpocuapcvuf.supabase.co';
+  let SUPABASE_ANON_KEY = 'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu';
+  let supabase = supabase || Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Plural variables
-let categories = [];
-let films = [];
-let votes = [];
+  // Plural variables
+  let categories = [];
+  let films = [];
+  let votes = [];
 
-const categoriesContainer = document.getElementById('categories-container');
-const submitVotesBtn = document.getElementById('submit-votes-btn');
-const messagesDiv = document.getElementById('messages');
+  const categoriesContainer = document.getElementById('categories-container');
+  const submitVotesBtn = document.getElementById('submit-votes-btn');
+  const messagesDiv = document.getElementById('messages');
 
-async function loadCategoriesAndFilms() {
-  const { data: categoriesData } = await supabase.from('categories').select('*').eq('active', true).order('id');
-  categories = categoriesData;
+  async function loadCategoriesAndFilms() {
+    const { data: categoriesData } = await supabase.from('categories').select('*').eq('active', true).order('id');
+    categories = categoriesData;
 
-  for (let category of categories) {
-    const categoryDiv = document.createElement('div');
-    categoryDiv.className = 'category';
-    categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
+    for (let category of categories) {
+      const categoryDiv = document.createElement('div');
+      categoryDiv.className = 'category';
+      categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
 
-    const { data: filmsData } = await supabase.from('films').select('*').eq('category_id', category.id).order('id');
-    films = filmsData;
+      const { data: filmsData } = await supabase.from('films').select('*').eq('category_id', category.id).order('id');
+      films = filmsData;
 
-    const filmsDiv = document.createElement('div'); filmsDiv.className = 'films';
-    for (let film of films) {
-      const filmOptionDiv = document.createElement('div');
-      filmOptionDiv.className = 'film-option';
-      filmOptionDiv.innerHTML = `<label><input type="radio" name="category-${category.id}" value="${film.id}"> ${film.name}</label>`;
-      filmsDiv.appendChild(filmOptionDiv);
+      const filmsDiv = document.createElement('div'); filmsDiv.className = 'films';
+      for (let film of films) {
+        const filmOptionDiv = document.createElement('div');
+        filmOptionDiv.className = 'film-option';
+        filmOptionDiv.innerHTML = `<label><input type="radio" name="category-${category.id}" value="${film.id}"> ${film.name}</label>`;
+        filmsDiv.appendChild(filmOptionDiv);
+      }
+      categoryDiv.appendChild(filmsDiv);
+      categoriesContainer.appendChild(categoryDiv);
     }
-    categoryDiv.appendChild(filmsDiv);
-    categoriesContainer.appendChild(categoryDiv);
-  }
-}
-
-loadCategoriesAndFilms();
-
-submitVotesBtn.addEventListener('click', async () => {
-  votes = [];
-  messagesDiv.textContent = '';
-  submitVotesBtn.disabled = true;
-
-  const categoriesDivs = document.querySelectorAll('.category');
-  for (let categoryDiv of categoriesDivs) {
-    const radios = categoryDiv.querySelectorAll('input[type="radio"]');
-    let selectedFilmId = null;
-    radios.forEach(r => { if (r.checked) selectedFilmId = r.value; });
-    if (!selectedFilmId) { messagesDiv.textContent = 'Please select a film for each category!'; submitVotesBtn.disabled = false; return; }
-    const categoryId = parseInt(radios[0].name.split('-')[1]);
-    votes.push({ category_id: categoryId, film_id: parseInt(selectedFilmId) });
   }
 
-  for (let vote of votes) {
-    await supabase.from('votes').insert([vote]);
-  }
+  await loadCategoriesAndFilms();
 
-  messagesDiv.textContent = 'Thank you! Your votes have been submitted.';
-});
+  submitVotesBtn.addEventListener('click', async () => {
+    votes = [];
+    messagesDiv.textContent = '';
+    submitVotesBtn.disabled = true;
+
+    const categoriesDivs = document.querySelectorAll('.category');
+    for (let categoryDiv of categoriesDivs) {
+      const radios = categoryDiv.querySelectorAll('input[type="radio"]');
+      let selectedFilmId = null;
+      radios.forEach(r => { if (r.checked) selectedFilmId = r.value; });
+      if (!selectedFilmId) { messagesDiv.textContent = 'Please select a film for each category!'; submitVotesBtn.disabled = false; return; }
+      const categoryId = parseInt(radios[0].name.split('-')[1]);
+      votes.push({ category_id: categoryId, film_id: parseInt(selectedFilmId) });
+    }
+
+    for (let vote of votes) {
+      await supabase.from('votes').insert([vote]);
+    }
+
+    messagesDiv.textContent = 'Thank you! Your votes have been submitted.';
+  });
+};
 </script>
 </body>
 </html>
