@@ -24,11 +24,14 @@ button:hover { background:#005BBB; }
 <input type="text" id="new-film" placeholder="Film name">
 <button id="add-film-btn">Add Film</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script type="module">
 window.onload = async () => {
+  // Dynamically import Supabase (ensures it's fully loaded)
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+
+  // Safe initialization
   if (!window.supabase) {
-    window.supabase = Supabase.createClient(
+    window.supabase = createClient(
       'https://asrydhgpdlpocuapcvuf.supabase.co',
       'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
     );
@@ -37,14 +40,23 @@ window.onload = async () => {
 
   const categorySelect = document.getElementById('category-select');
 
+  // Wait a tiny bit to ensure DOM and supabase ready
+  await new Promise(r => setTimeout(r, 100));
+
   async function loadCategories() {
-    const { data } = await supabase.from('categories').select('*').order('id');
-    categorySelect.innerHTML = '';
-    for (let category of data) {
-      const option = document.createElement('option');
-      option.value = category.id;
-      option.textContent = category.name;
-      categorySelect.appendChild(option);
+    try {
+      const { data, error } = await supabase.from('categories').select('*').order('id');
+      if (error) throw error;
+
+      categorySelect.innerHTML = '';
+      for (let category of data) {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        categorySelect.appendChild(option);
+      }
+    } catch (err) {
+      console.error('Error loading categories:', err.message);
     }
   }
 
