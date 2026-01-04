@@ -18,11 +18,11 @@ h1 { text-align:center; }
 <h1>The Eddie's 2025 Results</h1>
 <div id="categories-container" class="categories"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script type="module">
 window.onload = async () => {
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
   if (!window.supabase) {
-    window.supabase = Supabase.createClient(
+    window.supabase = createClient(
       'https://asrydhgpdlpocuapcvuf.supabase.co',
       'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
     );
@@ -30,22 +30,18 @@ window.onload = async () => {
   const supabase = window.supabase;
 
   const categoriesContainer = document.getElementById('categories-container');
+  const { data: categoriesData } = await supabase.from('categories').select('*').eq('active', true).order('id');
+  const { data: filmsData } = await supabase.from('films').select('*').order('id');
 
-  const { data: categories } = await supabase.from('categories').select('*').eq('active', true).order('id');
-
-  for (let category of categories) {
+  for (let category of categoriesData) {
     const categoryDiv = document.createElement('div');
     categoryDiv.className = 'category';
     categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
 
-    const { data: films } = await supabase.from('films').select('*').eq('category_id', category.id).order('id');
     const filmsDiv = document.createElement('div'); filmsDiv.className = 'films';
 
-    for (let film of films) {
-      const { count } = await supabase.from('votes').select('*', { count: 'exact' })
-        .eq('category_id', category.id)
-        .eq('film_id', film.id);
-
+    for (let film of filmsData) {
+      const { count } = await supabase.from('votes').select('*', { count: 'exact' }).eq('category_id', category.id).eq('film_id', film.id);
       const filmResultDiv = document.createElement('div');
       filmResultDiv.className = 'film-result';
       filmResultDiv.textContent = `${film.name}: ${count} vote(s)`;
