@@ -23,52 +23,43 @@ button:hover { background:#005BBB; }
 <button id="submit-votes-btn">Submit Votes</button>
 <div id="messages"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script type="module">
 window.onload = async () => {
-  // Safe Supabase initialization
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
   if (!window.supabase) {
-    window.supabase = Supabase.createClient(
+    window.supabase = createClient(
       'https://asrydhgpdlpocuapcvuf.supabase.co',
       'sb_publishable_KANIL3DCSWPFVyJjhJ4uYA_38LnWmCu'
     );
   }
   const supabase = window.supabase;
 
-  let categories = [];
-  let votes = [];
-
   const categoriesContainer = document.getElementById('categories-container');
   const submitVotesBtn = document.getElementById('submit-votes-btn');
   const messagesDiv = document.getElementById('messages');
 
-  async function loadCategoriesAndFilms() {
-    const { data: categoriesData } = await supabase.from('categories').select('*').eq('active', true).order('id');
-    categories = categoriesData;
+  const { data: categoriesData } = await supabase.from('categories').select('*').eq('active', true).order('id');
+  const { data: filmsData } = await supabase.from('films').select('*').order('id');
 
-    for (let category of categories) {
-      const categoryDiv = document.createElement('div');
-      categoryDiv.className = 'category';
-      categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
+  // Render categories with all films available for each
+  for (let category of categoriesData) {
+    const categoryDiv = document.createElement('div');
+    categoryDiv.className = 'category';
+    categoryDiv.innerHTML = `<h2>${category.name}</h2>`;
 
-      const { data: filmsData } = await supabase.from('films').select('*').eq('category_id', category.id).order('id');
-
-      const filmsDiv = document.createElement('div'); filmsDiv.className = 'films';
-      for (let film of filmsData) {
-        const filmOptionDiv = document.createElement('div');
-        filmOptionDiv.className = 'film-option';
-        filmOptionDiv.innerHTML = `<label><input type="radio" name="category-${category.id}" value="${film.id}"> ${film.name}</label>`;
-        filmsDiv.appendChild(filmOptionDiv);
-      }
-      categoryDiv.appendChild(filmsDiv);
-      categoriesContainer.appendChild(categoryDiv);
+    const filmsDiv = document.createElement('div'); filmsDiv.className = 'films';
+    for (let film of filmsData) {
+      const filmOptionDiv = document.createElement('div');
+      filmOptionDiv.className = 'film-option';
+      filmOptionDiv.innerHTML = `<label><input type="radio" name="category-${category.id}" value="${film.id}"> ${film.name}</label>`;
+      filmsDiv.appendChild(filmOptionDiv);
     }
+    categoryDiv.appendChild(filmsDiv);
+    categoriesContainer.appendChild(categoryDiv);
   }
 
-  await loadCategoriesAndFilms();
-
   submitVotesBtn.addEventListener('click', async () => {
-    votes = [];
+    const votes = [];
     messagesDiv.textContent = '';
     submitVotesBtn.disabled = true;
 
